@@ -1,0 +1,38 @@
+#Reference: https://pimylifeup.com/raspberry-pi-distance-sensor/
+
+#Import GPIO packages to manipulate pins 
+import RPi.GPIO as GPIO
+import time
+
+try:
+#Setup the input and output pin 
+      GPIO.setmode(GPIO.BOARD)
+      PIN_TRIGGER = 7
+      PIN_ECHO = 11
+      GPIO.setup(PIN_TRIGGER, GPIO.OUT)
+      GPIO.setup(PIN_ECHO, GPIO.IN)
+
+#Turn off trigger pin for 2 sec to stabilize
+      GPIO.output(PIN_TRIGGER, GPIO.LOW)
+      print "Waiting for sensor to settle"
+      time.sleep(2)
+
+      print "Calculating distance"
+      GPIO.output(PIN_TRIGGER, GPIO.HIGH)
+      time.sleep(0.00001)
+      GPIO.output(PIN_TRIGGER, GPIO.LOW)
+
+#Get start time and end time based on sensor's signal
+      while GPIO.input(PIN_ECHO)==0:
+            pulse_start_time = time.time()
+      while GPIO.input(PIN_ECHO)==1:
+            pulse_end_time = time.time()
+
+#Calculate and print important metrics 
+      pulse_duration = pulse_end_time - pulse_start_time
+      distance = round(pulse_duration * 17150, 2)
+      print "Distance:",distance,"cm"
+
+#Ensure the script is terminated 
+finally:
+      GPIO.cleanup()
