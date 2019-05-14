@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+window.onload = function () {
+//REFER TO THIS LINK FOR MORE INFO https://canvasjs.com/docs/charts/how-to/creating-dynamic-charts/
+
+
+//GET ALL RECORDS FROM LAMBDA/API GATEWAY AND PUT INTO "DATA" VARIABLE
+let data 
+const postData = async () => {
+  let url = "https://3gfvtff5ni.execute-api.ap-northeast-1.amazonaws.com/prod/data?name=Minh"
+  let rawBody = {}
+  let option = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "*/*"
+      },
+      credentials: "same-origin", 
+      body: JSON.stringify(rawBody)
+    }
+  let response = await fetch(url, option)
+  data = await response.json()
+}
+
+//PREPOPULATE POINTS ON CHART 
+var dps = [{x: 0, y: 0}];   //dataPoints. 
+
+//INITIATE CHART OBJECT
+var chart = new CanvasJS.Chart("chartContainer",{
+  title :{
+    text: "Live Data"
+  },
+  axisX: {						
+    title: "Time"
+  },
+  axisY: {						
+    title: "Distance",
+    minimum: 0,
+    maximum: 100   
+  },
+  data: [{
+    type: "line",
+    dataPoints : dps
+  }]
+});
+chart.render();
+
+//X VALUE OR TIME INCREMENT BASED ON DPS ARRAY LENGTH
+var xVal = dps.length + 1;
+
+//ACTIVATE POSTDATA FUNCTION, THEN PUSH X AND Y VALUES FROM DYNAMODB INTO DPS ARRAY FOR CHART TO UPDATE
+var updateChart = function () {
+  postData() 
+  randomNum = Math.floor((Math.random() * 100) + 1)
+  dps.push({x: xVal ,y: JSON.parse(data.Items[randomNum].DATA).distance}); //X INCREMENT BY 1 EVERY TIME IS RAN, Y IS RANDOMIZED DISTANCE FROM DYNAMODB
+  xVal++;
+  if (dps.length >  5 )
+    {
+      dps.shift();				
+    }
+      chart.render();		
+};
+
+//UPDATE CHART EVERY 2 SECONDS
+setInterval(function(){updateChart()}, 2000); 
+
+}
+</script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</head>
+<body>
+	<div id="chartContainer" style="height: 300px; width: 100%;">
+	</div>
+</body>
+</html>
